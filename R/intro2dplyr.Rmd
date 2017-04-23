@@ -1,0 +1,243 @@
+---
+title: "Intro2dplyr"
+author: "Justin Strate"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+data("mtcars")
+
+head(mtcars)
+str(mtcars)
+
+data("iris")
+
+head(iris)
+str(iris)
+
+class(mtcars)
+class(iris)
+mtcars
+iris
+```
+
+dplyr has the function tbl_df which we can use to convert data frames into tbl_df's
+
+```{r}
+mtcars <- tbl_df(mtcars)
+iris <- tbl_df(iris)
+```
+
+Let's save the names of the cars
+```{r}
+vehicle <- rownames(mtcars)
+```
+tbl_df's print differently and they run faster
+
+```{r}
+mtcars
+iris
+```
+
+If you want to print more rows you can use the n argument in the print function
+```{r}
+print(iris, n=52)
+```
+
+5 basic function you want to keep in mind when looking at dplyr
+select, filter, arrange, mutate, and summarise
+summarise is espeically useful with the function group_by
+also covers briefly the tbl_df, rename, everything
+
+
+#1.) select
+select takes after sql and serves to select variables of interest from a certain data frame
+for example let's say we want to select wt and mpg from the mtcars data set
+```{r}
+select(mtcars, wt, mpg)
+```
+
+The base R approach to doing this is as follows
+```{r}
+mtcars[,c('wt', 'mpg')]
+```
+
+You can also use pipelining
+the %>% is supposed to be interpreted as "then"
+let's also rename the variables using the rename function
+```{r}
+mtcars %>%
+  select(mpg,wt, gear) %>%
+  rename(Weight = wt, 'Miles Per Gallon' = mpg)
+```
+
+Notice the order in which you selects the variables reflects how they are outputted.
+
+Sometimes, you may simply want to rearrange only on and leave all the other columns.
+For example say you want to rearrange iris so that Species is the first column in the data frame. One approach is to use the \code{everything()} function.
+```{r}
+select(iris, Species, everything())
+```
+
+You can give select a range of variables using the colon. For example suppose we want to select all the variables from wt to mpg.
+```{r}
+select(mtcars, wt:mpg)
+```
+We can select all the variables in the data set except for a few variables as follows
+```{r}
+select(mtcars, -wt, -mpg)
+```
+
+base R approach
+```{r}
+mtcars[,!names(mtcars) %in% c('wt', 'mpg')]
+```
+
+#filter
+The next verb is filter, which as the name implies filters the data based on a condition. For example let's say we only want v-engine vehicles
+```{r}
+filter(mtcars, vs==1)
+```
+
+The base R approach to this is to use
+```{r}
+mtcars[mtcars$vs==1,]
+```
+
+We can also filter on more than one condition for example let's say we want the v engines and 4 cylinder.
+```{r}
+filter(mtcars, vs==1 & cyl==4)
+```
+
+The base R approach
+```{r}
+mtcars[mtcars$vs==1 & mtcars$cyl==4,]
+```
+We can drop vs and cyl since we know they can only be 1 and 4 respectively
+```{r}
+mtcars %>%
+  filter(vs==1 & cyl==4) %>%
+  select(-vs, -wt)
+```
+
+The base R approach
+```{r}
+mtcars[mtcars$vs==1 & mtcars$cyl==4, !colnames(mtcars) %in% c('mpg', 'cyl')]
+```
+
+#mutate- add in a variable
+First let me create a copy of mtcars
+```{r}
+mtcars_copy <- mtcars
+```
+
+Let's create a new variable in the data frame called- mpg2wt which mpg/wt
+```{r}
+mtcars <- mtcars %>%
+  mutate(mpg2wt = mpg/wt)
+```
+The base R approach
+```{r}
+mtcars[,'mpg2wt'] <- mtcars$mpg/mtcars$wt
+mtcars
+```
+You can add more than one variable at a time.
+For example let's add and let's add the variable vehicle which we saved earlier
+Let's also rearrange the data using what we learned earlier so that vehicle
+```{r}
+mtcars <- mtcars %>%
+  mutate(hp2wt = hp/wt, vehicle = vehicle) %>%
+  select(vehicle, everything())
+mtcars
+```
+
+#arrange- 
+arranges data in a certain order (ascending by default for numeric or a-z for character)
+```{r}
+mtcars %>%
+  select(vehicle, mpg, wt) %>%
+  arrange(mpg)
+```
+The base R approach
+```{r}
+mtcars[order(mtcars$mpg),names(mtcars) %in% c('vehicle', 'mpg', 'wt')]
+```
+If you want the data in descending order you can use the desc function inside arrange
+```{r}
+mtcars %>%
+  select(vehicle, mpg, wt) %>%
+  arrange(desc(mpg))
+```
+
+We can also arrange by a character varable if you want the data in alphabetical order
+```{r}
+mtcars %>%
+  select(vehicle, mpg, wt) %>%
+  arrange(vehicle)
+```
+
+desc also works with character variables if you want them to go in descending alphabetical order
+```{r}
+mtcars %>%
+  select(vehicle, mpg, wt) %>%
+  arrange(desc(vehicle))
+```
+You can also arrange by more than one variable. For example suppose we want to arrange the data by ascending cyl but descending qsec and let's print 15 observations
+```{r}
+mtcars %>%
+  select(vehicle, cyl, qsec) %>%
+  arrange(cyl, desc(qsec)) %>%
+  print(n=15)
+```
+
+#5.) summarise
+summarise helps us summarise data
+For example, let's say we want the the mean and standard deviations of mpg and wt
+```{r}
+mtcars%>%
+  select(mpg, wt) %>%
+  summarise(mean_mpg = mean(mpg), sd_mpg = sd(mpg), mean_wt = mean(wt), sd_wt = sd(wt))
+```
+
+
+summarise is espcially useful in conjunction with the function group_by.
+For example, let's say we want the mean sepal length for each different species in the iris data set
+```{r}
+iris %>%
+  select(Species, Sepal.Length) %>%
+  group_by(Species) %>%
+  summarise(mean_sepal_length = mean(Sepal.Length))
+```
+The base R approach
+```{r}
+tapply(iris$Sepal.Length, iris$Species, mean)
+```
+Let's say we want to know how many of each species we have- 50 as you can tell from earlier
+We can use the n function
+```{r}
+iris %>%
+  select(Species) %>%
+  group_by(Species) %>%
+  summarise(Count=n())
+```
+The base R approach
+```{r}
+tapply(iris$Sepal.Length, iris$Species, length)
+```
+You can also use this with more than 1 variable
+for example let's see how many v- engines and straigth engines (vs=0) we have for each number of cylinder
+```{r}
+mtcars %>%
+  select(vehicle, cyl, vs) %>%
+  group_by(cyl, vs) %>%
+  summarise(Count = n())
+```
+This should be interpreted as there is 1 4 cylinder engine that is also a straight engine (vs=0)
+There are 10 v 4 cylinder engines and so forth
+There are no 8 cylinder v engines
+
+The base R approach
+```{r}
+with(mtcars, tapply(mpg, list(cyl, vs), length))
+```
