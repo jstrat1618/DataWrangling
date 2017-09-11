@@ -1,0 +1,53 @@
+---
+title: "Joins"
+author: "Justin Strate"
+date: "September 11, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+Joining data from different data sets is unavoidable. Here, I'ld like to discuss some of the methods for joining data sets using the dplyr package and base R functions. Conveniently for SQL users, joins in dplyr mimics SQL joins. I'll frequently reference SQL termininolgy for joins though it is not necessary to know for this tutorial. Below are some practice data sets that we will use to illustrate the different types of join.
+
+```{r}
+library(dplyr)
+options(stringsAsFactors = FALSE)
+art <- data.frame(id = c(1,2,3,4), 
+                   name = c('John Doe', 'Jane Doe', 'Bob Smith', 'Amy Smith'), 
+                   score = c(95, 96, 75, 74))
+
+eng <- data.frame(id = c(5,2,6,4), 
+                   name = c('Tom Evans', 'Jane Doe', 'Evan Thompson', 'Amy Smith'), 
+                   score = c(100, 90, 80, 70))
+```
+
+# Inner Join
+You'll noitce Jane Doe and Amy Smith are the only people in both the art and eng data sets. Imagine we want to create a data set that contains the observations that are in both data sets. We can use dplyr's \code{inner_join} function for this.
+
+```{r}
+inner_join(art, eng, by = "id")
+```
+
+You'll notice R has assigned the names 'score.x' and 'score.y' in reference to the original source of the data and similarily for the name variable. We can get around this by joining by the variables id and name and using the \code{rename} function in dplyr.
+
+```{r}
+art %>%
+  rename(`art_score` = score) %>%
+  inner_join(eng, by = c('id', 'name')) %>%
+  rename(`eng_score` = score)
+```
+
+You can also do this using base R functions as follows
+```{r}
+merge(art, eng, by = "id")
+```
+
+```{r}
+temp <- merge(art, eng, by =c("id", "name"))
+
+names(temp) <- c('id', 'name', 'art_score', 'eng_score')
+temp
+```
