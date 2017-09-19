@@ -1,7 +1,7 @@
 ---
 title: "Joins"
 author: "Justin Strate"
-date: "September 11, 2017"
+date: "September 12, 2017"
 output: html_document
 ---
 
@@ -10,44 +10,182 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Introduction
-Joining data from different data sets is unavoidable. Here, I'ld like to discuss some of the methods for joining data sets using the dplyr package and base R functions. Conveniently for SQL users, joins in dplyr mimics SQL joins. I'll frequently reference SQL termininolgy for joins though it is not necessary to know for this tutorial. Below are some practice data sets that we will use to illustrate the different types of join.
+Joining data from different data sets is unavoidable. Here, I'ld like to discuss some of the methods for joining data sets using the dplyr package and base R functions. Conveniently for SQL users, the names for the different joins in dplyr mimic the names for SQL joins. However, it is not necessary to know for this tutorial. Below are some practice data sets that we'll use to illustrate the different types of join.
 
 ```{r}
 library(dplyr)
 options(stringsAsFactors = FALSE)
 art <- data.frame(id = c(1,2,3,4), 
                    name = c('John Doe', 'Jane Doe', 'Bob Smith', 'Amy Smith'), 
-                   score = c(95, 96, 75, 74))
+                   exam = c(95, 96, 75, 74))
 
-eng <- data.frame(id = c(5,2,6,4), 
+english <- data.frame(id = c(5,2,6,4), 
                    name = c('Tom Evans', 'Jane Doe', 'Evan Thompson', 'Amy Smith'), 
-                   score = c(100, 90, 80, 70))
+                   exam = c(100, 90, 80, 70))
+
+math <- data.frame(id_num = c(1,2,7,8), 
+                  full_name = c('John Doe', 'Jane Doe', 'John Torres', 'Sue Baker'), 
+                   exam = c(70, 80, 90, 100))
+
 ```
 
 # Inner Join
-You'll noitce Jane Doe and Amy Smith are the only people in both the art and eng data sets. Imagine we want to create a data set that contains the observations that are in both data sets. We can use dplyr's \code{inner_join} function for this.
+You'll noitce Jane Doe and Amy Smith are the only people in both the art and english data sets. Imagine we want to create a data set that contains the observations that are in both data sets. We can use dplyr's \code{inner_join} function for this.
 
 ```{r}
-inner_join(art, eng, by = "id")
+inner_join(art, english, by = "id")
 ```
 
-You'll notice R has assigned the names 'score.x' and 'score.y' in reference to the original source of the data and similarily for the name variable. We can get around this by joining by the variables id and name and using the \code{rename} function in dplyr.
+You'll notice R has assigned the names 'exam.x' and 'exam.y' in reference to the original source of the data and similarily for the name variable. We can get around this by joining by the variables id and name and using the \code{rename} function in dplyr.
 
 ```{r}
 art %>%
-  rename(`art_score` = score) %>%
-  inner_join(eng, by = c('id', 'name')) %>%
-  rename(`eng_score` = score)
+  rename(`art_exam` = exam) %>%
+  inner_join(english, by = c('id', 'name')) %>%
+  rename(`english_exam` = exam)
 ```
 
 You can also do this using base R functions as follows
 ```{r}
-merge(art, eng, by = "id")
+merge(art, english, by = "id")
 ```
 
 ```{r}
-temp <- merge(art, eng, by =c("id", "name"))
+temp <- merge(art, english, by =c("id", "name"))
 
-names(temp) <- c('id', 'name', 'art_score', 'eng_score')
+names(temp) <- c('id', 'name', 'art_exam', 'english_exam')
 temp
 ```
+
+## Joining when variables are named differently
+Sometimes the variables you want to join by have different names in the data sets you are joining. There are several approaches to this problem. Using dplyr's \code{rename} function, you can simply rename the variable . For exmaple, let's say we want to compare the math exam scores with the art scores.
+
+```{r}
+math %>%
+  rename(`id` = id_num) %>%
+  inner_join(art, by = 'id')
+```
+We can use the \code{rename} function again to distinguish between the exam scores better and join by id and name to avoid having two name variables.
+```{r}
+math %>%
+  rename(`id` = id_num, `name` = full_name, `math_exam` = exam) %>%
+  inner_join(art, by = c('id', 'name')) %>%
+  rename(`art_exam` = exam)
+```
+
+Using base R functions you can do this by using the \code{by.x} and \code{by.y} arguments in the \code{merge} function. The name of the variable in the \code{by.x} argument becomes the name of the variable in the joined data set. 
+
+```{r}
+merge(art, math, by.x = 'id', by.y = 'id_num')
+```
+
+We can rename the columns and just delete the full_name column as follows
+
+```{r}
+temp <- merge(art, math, by.x = 'id', by.y = 'id_num')
+temp <- temp[,-which(names(temp)=='full_name')]#Delete column named "full_nae"
+names(temp) <- c('id', 'name', 'art_exam', 'math_exam')
+temp
+
+```
+
+# Full Join
+Sometimes we may want to take all the data from one data set and merge it to another data set as we did in the Inner Join example, but instead of eliminating rows that are do not have a corresponding entry in one or the other data set, we include those rows and put a missing value (\code{NA}) when appropriate. In this case, we can use the \code{full_join} dplyr function.
+
+```{r}
+full_join(art, english, by = 'id')
+```
+
+We can \code{rename} function to rename the variables. 
+```{r}
+art %>%
+  rename(`art_exam` = exam) %>%
+  full_join( english, by = c('id' ,'name')) %>%
+  rename(`english_exam` = exam)
+```
+
+You can also use the base R function  \code{merge} as follows.
+
+```{r}
+merge(art, english, by = "id", all.x = TRUE, all.y = TRUE)
+```
+
+```{r}
+temp <- merge(art, english, by = c('id', 'name'), all.x = TRUE, all.y = TRUE)
+names(temp) <- c('id', 'name', 'art_exam', 'english_exam')
+temp
+```
+# Left join
+Sometimes we want to keep all of the rows in one data set but only incorporate some rows from another data set. For example, we may want to compare create data set with all the art exam scores and the math exam scores for the students who are in both math and art classes.
+
+```{r}
+left_join(art, english, by = 'id')
+```
+Here, the "left" data set is the art data set. As you can see we can we have the art and enslish exam scores for both Jane Doe and Amy Smith because they are in both classes. John Doe and Bob Smith are in the data set because they are in art class, but their english exam scores are listed as "NA" for missing because they are  not in the english class. Although Tom Evans and Evan Thomspon are in english class they are not in art class, and thus not in the left joined data set. 
+
+Again we'll clean up the names as we've done before.
+```{r}
+art %>%
+  rename(`art_exam` = exam) %>%
+  left_join(english, by = c('id', 'name')) %>%
+  rename(`english_exam` = exam)
+
+```
+Similarily, you can use the dplyr function \code{right_join} if you desire to do the same operation but with the right data set rather than the left. For example, if we use \code{right_join} instead of \code{left_join} as we did in the past example, we would get all the observations in the english data set, and we would have the art exam scores.
+
+
+Using purely base R functions you can use the \code{by.x} argument to do a left join. 
+```{r}
+merge(art, english, by = 'id', all.x = TRUE)
+```
+We can clean up the names again as follows.
+```{r}
+temp <- merge(art, english, by = c('id', 'name'), all.x = TRUE)
+names(temp) <- c('id', 'name', 'art_exam', 'english_exam')
+temp
+```
+
+To do a right join using base R functions, you guessed it..... use the \code{by.y} argument.
+
+# Anti Join
+Imagine if we want to obtain a new data set that contains only the observations that are NOT found in another data set. You could do this by filtering or by using dplyr's \code{anti_join} function.
+```{r}
+anti_join(art, english, by = "id")
+```
+ There is no equivalent base R function to \code{anti_join}. However, you can still do this by filtering.
+
+```{r}
+art2 <- art[-which(art$id %in% english$id),]
+art2
+```
+You could also do this by using dplyr's \code{filter} function.
+
+# Binding rows
+Sometimes, you may want to stack data that is from different sources. I like to think of this as stacking data from different data sets on top of each other. However, this requires you have that the data be compatible with the data types are compatible. The dplyr function \code{bind_rows} and base R function \code{rbind} both do this.
+
+For example, suppose we want to stack the art and english data sets.
+```{r}
+bind_rows(art, english)
+```
+
+Or we can do this using the base R \code{rbind} function.
+```{r}
+rbind(art, english)
+```
+
+# Binding columns
+Someties we have an additional variable that we simply want to add to the data set. The dplyr function \code{bind_cols} and base R function \code{cbind} allow us to do this.
+
+For example suppose the score for the second art exam listed in the order in the previous exam scores are as follows: 81, 80, 92, 93. We can add these additional exam scores as follows.
+
+```{r}
+exam2 <- data.frame(exam2 =c(81, 80, 92, 93))
+bind_cols(art, exam2)
+```
+
+Alternatively, using the base R function \code{cbind} we can do this as follows.
+```{r}
+cbind(art, exam2)
+```
+
+

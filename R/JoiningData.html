@@ -11,7 +11,7 @@
 
 <meta name="author" content="Justin Strate" />
 
-<meta name="date" content="2017-09-11" />
+<meta name="date" content="2017-09-12" />
 
 <title>Joins</title>
 
@@ -119,14 +119,14 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Joins</h1>
 <h4 class="author"><em>Justin Strate</em></h4>
-<h4 class="date"><em>September 11, 2017</em></h4>
+<h4 class="date"><em>September 12, 2017</em></h4>
 
 </div>
 
 
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>Joining data from different data sets is unavoidable. Here, I’ld like to discuss some of the methods for joining data sets using the dplyr package and base R functions. Conveniently for SQL users, joins in dplyr mimics SQL joins. I’ll frequently reference SQL termininolgy for joins though it is not necessary to know for this tutorial. Below are some practice data sets that we will use to illustrate the different types of join.</p>
+<p>Joining data from different data sets is unavoidable. Here, I’ld like to discuss some of the methods for joining data sets using the dplyr package and base R functions. Conveniently for SQL users, the names for the different joins in dplyr mimic the names for SQL joins. However, it is not necessary to know for this tutorial. Below are some practice data sets that I’ll use to illustrate the different types of join.</p>
 <pre class="r"><code>library(dplyr)</code></pre>
 <pre><code>## 
 ## Attaching package: 'dplyr'</code></pre>
@@ -139,39 +139,216 @@ $(document).ready(function () {
 <pre class="r"><code>options(stringsAsFactors = FALSE)
 art &lt;- data.frame(id = c(1,2,3,4), 
                    name = c('John Doe', 'Jane Doe', 'Bob Smith', 'Amy Smith'), 
-                   score = c(95, 96, 75, 74))
+                   exam = c(95, 96, 75, 74))
 
-eng &lt;- data.frame(id = c(5,2,6,4), 
+english &lt;- data.frame(id = c(5,2,6,4), 
                    name = c('Tom Evans', 'Jane Doe', 'Evan Thompson', 'Amy Smith'), 
-                   score = c(100, 90, 80, 70))</code></pre>
+                   exam = c(100, 90, 80, 70))
+
+math &lt;- data.frame(id_num = c(1,2,7,8), 
+                  full_name = c('John Doe', 'Jane Doe', 'John Torres', 'Sue Baker'), 
+                   exam = c(70, 80, 90, 100))</code></pre>
 </div>
 <div id="inner-join" class="section level1">
 <h1>Inner Join</h1>
-<p>You’ll noitce Jane Doe and Amy Smith are the only people in both the art and eng data sets. Imagine we want to create a data set that contains the observations that are in both data sets. We can use dplyr’s  function for this.</p>
-<pre class="r"><code>inner_join(art, eng, by = &quot;id&quot;)</code></pre>
-<pre><code>##   id    name.x score.x    name.y score.y
-## 1  2  Jane Doe      96  Jane Doe      90
-## 2  4 Amy Smith      74 Amy Smith      70</code></pre>
-<p>You’ll notice R has assigned the names ‘score.x’ and ‘score.y’ in reference to the original source of the data and similarily for the name variable. We can get around this by joining by the variables id and name and using the  function in dplyr.</p>
+<p>You’ll noitce Jane Doe and Amy Smith are the only people in both the art and english data sets. Imagine we want to create a data set that contains the observations that are in both data sets. We can use dplyr’s  function for this.</p>
+<pre class="r"><code>inner_join(art, english, by = &quot;id&quot;)</code></pre>
+<pre><code>##   id    name.x exam.x    name.y exam.y
+## 1  2  Jane Doe     96  Jane Doe     90
+## 2  4 Amy Smith     74 Amy Smith     70</code></pre>
+<p>You’ll notice R has assigned the names ‘exam.x’ and ‘exam.y’ in reference to the original source of the data and similarily for the name variable. We can get around this by joining by the variables id and name and using the  function in dplyr.</p>
 <pre class="r"><code>art %&gt;%
-  rename(`art_score` = score) %&gt;%
-  inner_join(eng, by = c('id', 'name')) %&gt;%
-  rename(`eng_score` = score)</code></pre>
-<pre><code>##   id      name art_score eng_score
-## 1  2  Jane Doe        96        90
-## 2  4 Amy Smith        74        70</code></pre>
+  rename(`art_exam` = exam) %&gt;%
+  inner_join(english, by = c('id', 'name')) %&gt;%
+  rename(`english_exam` = exam)</code></pre>
+<pre><code>##   id      name art_exam english_exam
+## 1  2  Jane Doe       96           90
+## 2  4 Amy Smith       74           70</code></pre>
 <p>You can also do this using base R functions as follows</p>
-<pre class="r"><code>merge(art, eng, by = &quot;id&quot;)</code></pre>
-<pre><code>##   id    name.x score.x    name.y score.y
-## 1  2  Jane Doe      96  Jane Doe      90
-## 2  4 Amy Smith      74 Amy Smith      70</code></pre>
-<pre class="r"><code>temp &lt;- merge(art, eng, by =c(&quot;id&quot;, &quot;name&quot;))
+<pre class="r"><code>merge(art, english, by = &quot;id&quot;)</code></pre>
+<pre><code>##   id    name.x exam.x    name.y exam.y
+## 1  2  Jane Doe     96  Jane Doe     90
+## 2  4 Amy Smith     74 Amy Smith     70</code></pre>
+<pre class="r"><code>temp &lt;- merge(art, english, by =c(&quot;id&quot;, &quot;name&quot;))
 
-names(temp) &lt;- c('id', 'name', 'art_score', 'eng_score')
+names(temp) &lt;- c('id', 'name', 'art_exam', 'english_exam')
 temp</code></pre>
-<pre><code>##   id      name art_score eng_score
-## 1  2  Jane Doe        96        90
-## 2  4 Amy Smith        74        70</code></pre>
+<pre><code>##   id      name art_exam english_exam
+## 1  2  Jane Doe       96           90
+## 2  4 Amy Smith       74           70</code></pre>
+<div id="joining-when-variables-are-named-differently" class="section level2">
+<h2>Joining when variables are named differently</h2>
+<p>Sometimes the variables you want to join by have different names in the data sets you are joining. There are several approaches to this problem. Using dplyr’s  function, you can simply rename the variable . For exmaple, let’s say we want to compare the math exam scores with the art scores.</p>
+<pre class="r"><code>math %&gt;%
+  rename(`id` = id_num) %&gt;%
+  inner_join(art, by = 'id')</code></pre>
+<pre><code>##   id full_name exam.x     name exam.y
+## 1  1  John Doe     70 John Doe     95
+## 2  2  Jane Doe     80 Jane Doe     96</code></pre>
+<p>We can use the  function again to distinguish between the exam scores better and join by id and name to avoid having two name variables.</p>
+<pre class="r"><code>math %&gt;%
+  rename(`id` = id_num, `name` = full_name, `math_exam` = exam) %&gt;%
+  inner_join(art, by = c('id', 'name')) %&gt;%
+  rename(`art_exam` = exam)</code></pre>
+<pre><code>##   id     name math_exam art_exam
+## 1  1 John Doe        70       95
+## 2  2 Jane Doe        80       96</code></pre>
+<p>Using base R functions you can do this by using the  and  arguments in the  function. The name of the variable in the  argument becomes the name of the variable in the joined data set.</p>
+<pre class="r"><code>merge(art, math, by.x = 'id', by.y = 'id_num')</code></pre>
+<pre><code>##   id     name exam.x full_name exam.y
+## 1  1 John Doe     95  John Doe     70
+## 2  2 Jane Doe     96  Jane Doe     80</code></pre>
+<p>We can rename the columns and just delete the full_name column as follows</p>
+<pre class="r"><code>temp &lt;- merge(art, math, by.x = 'id', by.y = 'id_num')
+temp &lt;- temp[,-which(names(temp)=='full_name')]#Delete column named &quot;full_nae&quot;
+names(temp) &lt;- c('id', 'name', 'art_exam', 'math_exam')
+temp</code></pre>
+<pre><code>##   id     name art_exam math_exam
+## 1  1 John Doe       95        70
+## 2  2 Jane Doe       96        80</code></pre>
+</div>
+</div>
+<div id="full-join" class="section level1">
+<h1>Full Join</h1>
+<p>Sometimes we may want to take all the data from one data set and merge it to another data set as we did in the Inner Join example, but instead of eliminating rows that are do not have a corresponding entry in one or the other data set, we include those rows and put a missing value () when appropriate. In this case, we can use the  dplyr function.</p>
+<pre class="r"><code>full_join(art, english, by = 'id')</code></pre>
+<pre><code>##   id    name.x exam.x        name.y exam.y
+## 1  1  John Doe     95          &lt;NA&gt;     NA
+## 2  2  Jane Doe     96      Jane Doe     90
+## 3  3 Bob Smith     75          &lt;NA&gt;     NA
+## 4  4 Amy Smith     74     Amy Smith     70
+## 5  5      &lt;NA&gt;     NA     Tom Evans    100
+## 6  6      &lt;NA&gt;     NA Evan Thompson     80</code></pre>
+<p>We can  function to rename the variables.</p>
+<pre class="r"><code>art %&gt;%
+  rename(`art_exam` = exam) %&gt;%
+  full_join( english, by = c('id' ,'name')) %&gt;%
+  rename(`english_exam` = exam)</code></pre>
+<pre><code>##   id          name art_exam english_exam
+## 1  1      John Doe       95           NA
+## 2  2      Jane Doe       96           90
+## 3  3     Bob Smith       75           NA
+## 4  4     Amy Smith       74           70
+## 5  5     Tom Evans       NA          100
+## 6  6 Evan Thompson       NA           80</code></pre>
+<p>You can also use the base R function  as follows.</p>
+<pre class="r"><code>merge(art, english, by = &quot;id&quot;, all.x = TRUE, all.y = TRUE)</code></pre>
+<pre><code>##   id    name.x exam.x        name.y exam.y
+## 1  1  John Doe     95          &lt;NA&gt;     NA
+## 2  2  Jane Doe     96      Jane Doe     90
+## 3  3 Bob Smith     75          &lt;NA&gt;     NA
+## 4  4 Amy Smith     74     Amy Smith     70
+## 5  5      &lt;NA&gt;     NA     Tom Evans    100
+## 6  6      &lt;NA&gt;     NA Evan Thompson     80</code></pre>
+<pre class="r"><code>temp &lt;- merge(art, english, by = c('id', 'name'), all.x = TRUE, all.y = TRUE)
+names(temp) &lt;- c('id', 'name', 'art_exam', 'english_exam')
+temp</code></pre>
+<pre><code>##   id          name art_exam english_exam
+## 1  1      John Doe       95           NA
+## 2  2      Jane Doe       96           90
+## 3  3     Bob Smith       75           NA
+## 4  4     Amy Smith       74           70
+## 5  5     Tom Evans       NA          100
+## 6  6 Evan Thompson       NA           80</code></pre>
+</div>
+<div id="left-join" class="section level1">
+<h1>Left join</h1>
+<p>Sometimes we want to keep all of the rows in one data set but only incorporate some rows from another data set. For example, we may want to compare create data set with all the art exam scores and the math exam scores for the students who are in both math and art classes.</p>
+<pre class="r"><code>left_join(art, english, by = 'id')</code></pre>
+<pre><code>##   id    name.x exam.x    name.y exam.y
+## 1  1  John Doe     95      &lt;NA&gt;     NA
+## 2  2  Jane Doe     96  Jane Doe     90
+## 3  3 Bob Smith     75      &lt;NA&gt;     NA
+## 4  4 Amy Smith     74 Amy Smith     70</code></pre>
+<p>Here, the “left” data set is the art data set. As you can see we can we have the art and enslish exam scores for both Jane Doe and Amy Smith because they are in both classes. John Doe and Bob Smith are in the data set because they are in art class, but their english exam scores are listed as “NA” for missing because they are not in the english class. Although Tom Evans and Evan Thomspon are in english class they are not in art class, and thus not in the left joined data set.</p>
+<p>Again we’ll clean up the names as we’ve done before.</p>
+<pre class="r"><code>art %&gt;%
+  rename(`art_exam` = exam) %&gt;%
+  left_join(english, by = c('id', 'name')) %&gt;%
+  rename(`english_exam` = exam)</code></pre>
+<pre><code>##   id      name art_exam english_exam
+## 1  1  John Doe       95           NA
+## 2  2  Jane Doe       96           90
+## 3  3 Bob Smith       75           NA
+## 4  4 Amy Smith       74           70</code></pre>
+<p>Similarily, you can use the dplyr function  if you desire to do the same operation but with the right data set rather than the left. For example, if we use  instead of  as we did in the past example, we would get all the observations in the english data set, and we would have the art exam scores.</p>
+<p>Using purely base R functions you can use the  argument to do a left join.</p>
+<pre class="r"><code>merge(art, english, by = 'id', all.x = TRUE)</code></pre>
+<pre><code>##   id    name.x exam.x    name.y exam.y
+## 1  1  John Doe     95      &lt;NA&gt;     NA
+## 2  2  Jane Doe     96  Jane Doe     90
+## 3  3 Bob Smith     75      &lt;NA&gt;     NA
+## 4  4 Amy Smith     74 Amy Smith     70</code></pre>
+<p>We can clean up the names again as follows.</p>
+<pre class="r"><code>temp &lt;- merge(art, english, by = c('id', 'name'), all.x = TRUE)
+names(temp) &lt;- c('id', 'name', 'art_exam', 'english_exam')
+temp</code></pre>
+<pre><code>##   id      name art_exam english_exam
+## 1  1  John Doe       95           NA
+## 2  2  Jane Doe       96           90
+## 3  3 Bob Smith       75           NA
+## 4  4 Amy Smith       74           70</code></pre>
+<p>To do a right join using base R functions, you guessed it….. use the  argument.</p>
+</div>
+<div id="anti-join" class="section level1">
+<h1>Anti Join</h1>
+<p>Imagine if we want to obtain a new data set that contains only the observations that are NOT found in another data set. You could do this by filtering or by using dplyr’s  function.</p>
+<pre class="r"><code>anti_join(art, english, by = &quot;id&quot;)</code></pre>
+<pre><code>##   id      name exam
+## 1  1  John Doe   95
+## 2  3 Bob Smith   75</code></pre>
+<p>There is no equivalent base R function to . However, you can still do this by filtering.</p>
+<pre class="r"><code>art2 &lt;- art[-which(art$id %in% english$id),]
+art2</code></pre>
+<pre><code>##   id      name exam
+## 1  1  John Doe   95
+## 3  3 Bob Smith   75</code></pre>
+<p>You could also do this by using dplyr’s  function.</p>
+</div>
+<div id="binding-rows" class="section level1">
+<h1>Binding rows</h1>
+<p>Sometimes, you may want to stack data that is from different sources. I like to think of this as stacking data from different data sets on top of each other. However, this requires you have that the data be compatible with the data types are compatible. The dplyr function  and base R function  both do this.</p>
+<p>For example, suppose we want to stack the art and english data sets.</p>
+<pre class="r"><code>bind_rows(art, english)</code></pre>
+<pre><code>##   id          name exam
+## 1  1      John Doe   95
+## 2  2      Jane Doe   96
+## 3  3     Bob Smith   75
+## 4  4     Amy Smith   74
+## 5  5     Tom Evans  100
+## 6  2      Jane Doe   90
+## 7  6 Evan Thompson   80
+## 8  4     Amy Smith   70</code></pre>
+<p>Or we can do this using the base R  function.</p>
+<pre class="r"><code>rbind(art, english)</code></pre>
+<pre><code>##   id          name exam
+## 1  1      John Doe   95
+## 2  2      Jane Doe   96
+## 3  3     Bob Smith   75
+## 4  4     Amy Smith   74
+## 5  5     Tom Evans  100
+## 6  2      Jane Doe   90
+## 7  6 Evan Thompson   80
+## 8  4     Amy Smith   70</code></pre>
+</div>
+<div id="binding-columns" class="section level1">
+<h1>Binding columns</h1>
+<p>Someties we have an additional variable that we simply want to add to the data set. The dplyr function  and base R function  allow us to do this.</p>
+<p>For example suppose the score for the second art exam listed in the order in the previous exam scores are as follows: 81, 80, 92, 93. We can add these additional exam scores as follows.</p>
+<pre class="r"><code>exam2 &lt;- data.frame(exam2 =c(81, 80, 92, 93))
+bind_cols(art, exam2)</code></pre>
+<pre><code>##   id      name exam exam2
+## 1  1  John Doe   95    81
+## 2  2  Jane Doe   96    80
+## 3  3 Bob Smith   75    92
+## 4  4 Amy Smith   74    93</code></pre>
+<p>Alternatively, using the base R function  we can do this as follows.</p>
+<pre class="r"><code>cbind(art, exam2)</code></pre>
+<pre><code>##   id      name exam exam2
+## 1  1  John Doe   95    81
+## 2  2  Jane Doe   96    80
+## 3  3 Bob Smith   75    92
+## 4  4 Amy Smith   74    93</code></pre>
 </div>
 
 
