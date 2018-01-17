@@ -1,5 +1,5 @@
 ---
-title: "Intro2dplyr"
+title: "Fundamentals of Data Wrangling in R"
 author: "Justin Strate"
 output: html_document
 ---
