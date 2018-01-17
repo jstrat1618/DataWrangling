@@ -139,7 +139,7 @@ $(document).ready(function () {
 <pre class="r"><code>library(tidyr)</code></pre>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>The tidyr package allows you to easily transform your data in ways that would otherwise be very difficult with base R. The four main functions I would like to introduce you to are , , , and . The first data set I would like to use the iris data set. It contains 3 species of flowers: setosa, versicolor, and virginica. The are 50 observations of sepal length, sepal width, petal length, and pedal width; altogether, 150 observations.</p>
+<p>The tidyr package allows you to easily transform your data in ways that would otherwise be very difficult with base R. The four main functions I would like to introduce you to are <code>gather</code>, <code>seperate</code>, <code>collapse</code>, and <code>spread</code>. The first data set I would like to use the iris data set. It contains 3 species of flowers: setosa, versicolor, and virginica. The are 50 observations of sepal length, sepal width, petal length, and pedal width; altogether, 150 observations.</p>
 <pre class="r"><code>data(&quot;iris&quot;)
 head(iris)</code></pre>
 <pre><code>##   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
@@ -149,7 +149,7 @@ head(iris)</code></pre>
 ## 4          4.6         3.1          1.5         0.2  setosa
 ## 5          5.0         3.6          1.4         0.2  setosa
 ## 6          5.4         3.9          1.7         0.4  setosa</code></pre>
-<p>Imagine we wanted a data frame with one 3 columns: one the species, the value observed and weather that value was recorded, and the type of measurement (sepal length, sepal width, etc). We coud use the  function for this. Following in the tidyverse ways, the first argument in the gather function is the data set, which we will supply using the magrittr pipe (%&gt;%). The second argument, key, is the column used to gether the data. The third argument, value, is the name of the new column being created. The last argument is the columns you are gathering. These can be suppled column by column sepearted by a comma or you can specify a range of columns using the “:” operator as I do here.</p>
+<p>Imagine we wanted a data frame with one 3 columns: one the species, the value observed and weather that value was recorded, and the type of measurement (sepal length, sepal width, etc). We coud use the <code>gather</code> function for this. Following in the tidyverse ways, the first argument in the gather function is the data set, which we will supply using the magrittr pipe (%&gt;%). The second argument, key, is the column used to gether the data. The third argument, value, is the name of the new column being created. The last argument is the columns you are gathering. These can be suppled column by column sepearted by a comma or you can specify a range of columns using the “:” operator as I do here.</p>
 <pre class="r"><code>iris %&gt;%
   gather( key = Species, value = &quot;measurement&quot;, Sepal.Length:Petal.Width) %&gt;%
   head()</code></pre>
@@ -171,24 +171,24 @@ head(iris)</code></pre>
   Friday = rnorm(3),
   Saturday = rnorm(3)
                   ))</code></pre>
-<p>You’ll see that using the gather function as we did before makes the data frame out of order, which isn’t very useful if we wanted to plot the data over time. We can overcome this simply by using dplyr’s  function.</p>
+<p>You’ll see that using the <code>gather</code> function as we did before makes the data frame out of order, which isn’t very useful if we wanted to plot the data over time. We can overcome this simply by using dplyr’s <code>arrange</code> function.</p>
 <pre class="r"><code>dat %&gt;%
   gather(key = Day, value = &quot;x&quot;, Sunday:Saturday) %&gt;%
   arrange(week_begins)</code></pre>
 <pre><code>## Warning: package 'bindrcpp' was built under R version 3.4.3</code></pre>
 <pre><code>## # A tibble: 21 x 3
-##    week_begins Day            x
-##    &lt;date&gt;      &lt;chr&gt;      &lt;dbl&gt;
-##  1 2017-12-31  Sunday    -0.656
-##  2 2017-12-31  Monday     1.26 
-##  3 2017-12-31  Tuesday    1.32 
-##  4 2017-12-31  Wednesday -0.889
-##  5 2017-12-31  Thursday  -0.693
-##  6 2017-12-31  Friday     1.02 
-##  7 2017-12-31  Saturday  -0.586
-##  8 2018-01-07  Sunday     0.956
-##  9 2018-01-07  Monday    -0.531
-## 10 2018-01-07  Tuesday   -0.194
+##    week_begins Day             x
+##    &lt;date&gt;      &lt;chr&gt;       &lt;dbl&gt;
+##  1 2017-12-31  Sunday    -0.792 
+##  2 2017-12-31  Monday     0.364 
+##  3 2017-12-31  Tuesday   -0.779 
+##  4 2017-12-31  Wednesday -0.690 
+##  5 2017-12-31  Thursday   0.104 
+##  6 2017-12-31  Friday     0.459 
+##  7 2017-12-31  Saturday  -0.645 
+##  8 2018-01-07  Sunday    -0.153 
+##  9 2018-01-07  Monday    -0.738 
+## 10 2018-01-07  Tuesday    0.0774
 ## # ... with 11 more rows</code></pre>
 </div>
 

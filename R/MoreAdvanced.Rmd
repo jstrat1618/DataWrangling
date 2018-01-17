@@ -11,14 +11,14 @@ library(tidyr)
 ```
 
 ## Introduction
-The tidyr package allows you to easily transform your data in ways that would otherwise be very difficult with base R. The four main functions I would like to introduce you to are \code{gather}, \code{seperate}, \code{collapse}, and \code{spread}. The first data set I would like to use the iris data set. It contains 3 species of flowers: setosa, versicolor, and virginica. The are 50 observations of sepal length, sepal width, petal length, and pedal width; altogether, 150 observations.
+The tidyr package allows you to easily transform your data in ways that would otherwise be very difficult with base R. The four main functions I would like to introduce you to are `gather`, `seperate`, `collapse`, and `spread`. The first data set I would like to use the iris data set. It contains 3 species of flowers: setosa, versicolor, and virginica. The are 50 observations of sepal length, sepal width, petal length, and pedal width; altogether, 150 observations.
 
 ```{r}
 data("iris")
 head(iris)
 ```
 
-Imagine we wanted a data frame with one 3 columns: one the species, the value observed and weather that value was recorded, and the type of measurement (sepal length, sepal width, etc). We coud use the \code{gather} function for this. Following in the tidyverse ways, the first argument in the gather function is the data set, which we will supply using the magrittr pipe (%>%). The second argument, key, is the column used to gether the data. The third argument, value, is the name of the new column being created. The last argument is the columns you are gathering. These can be suppled column by column sepearted by a comma or you can specify a range of columns using the ":" operator as I do here.
+Imagine we wanted a data frame with one 3 columns: one the species, the value observed and weather that value was recorded, and the type of measurement (sepal length, sepal width, etc). We coud use the `gather` function for this. Following in the tidyverse ways, the first argument in the gather function is the data set, which we will supply using the magrittr pipe (%>%). The second argument, key, is the column used to gether the data. The third argument, value, is the name of the new column being created. The last argument is the columns you are gathering. These can be suppled column by column sepearted by a comma or you can specify a range of columns using the ":" operator as I do here.
 
 ```{r}
 iris %>%
@@ -42,7 +42,7 @@ dat <- tbl_df(data.frame(
                   ))
 ```
 
-You'll see that using the gather function as we did before makes the data frame out of order, which isn't very useful if we wanted to plot the data over time. We can overcome this simply by using dplyr's \code{arrange} function. 
+You'll see that using the `gather` function as we did before makes the data frame out of order, which isn't very useful if we wanted to plot the data over time. We can overcome this simply by using dplyr's `arrange` function. 
 ```{r}
 dat %>%
   gather(key = Day, value = "x", Sunday:Saturday) %>%
