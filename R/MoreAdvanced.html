@@ -149,47 +149,56 @@ head(iris)</code></pre>
 ## 4          4.6         3.1          1.5         0.2  setosa
 ## 5          5.0         3.6          1.4         0.2  setosa
 ## 6          5.4         3.9          1.7         0.4  setosa</code></pre>
-<p>Imagine we wanted a data frame with one 3 columns: one the species, the value observed and weather that value was recorded, and the type of measurement (sepal length, sepal width, etc). We coud use the <code>gather</code> function for this. Following in the tidyverse ways, the first argument in the gather function is the data set, which we will supply using the magrittr pipe (%&gt;%). The second argument, key, is the column used to gether the data. The third argument, value, is the name of the new column being created. The last argument is the columns you are gathering. These can be suppled column by column sepearted by a comma or you can specify a range of columns using the “:” operator as I do here.</p>
-<pre class="r"><code>iris %&gt;%
-  gather( key = Species, value = &quot;measurement&quot;, Sepal.Length:Petal.Width) %&gt;%
-  head()</code></pre>
-<pre><code>##   Species      Species measurement
-## 1  setosa Sepal.Length         5.1
-## 2  setosa Sepal.Length         4.9
-## 3  setosa Sepal.Length         4.7
-## 4  setosa Sepal.Length         4.6
-## 5  setosa Sepal.Length         5.0
-## 6  setosa Sepal.Length         5.4</code></pre>
-<p>I have run into scenarios where I had a data set indexed by weeks, but I wanted a data set that was indexed by days. I’ve simulated one such data set below.</p>
+<p>Imagine we wanted a data frame with one 3 columns: one the species, the type of measurement (sepal length, sepal width, etc) and the recorded. We coud use the <code>gather</code> function for this. Following in the tidyverse ways, the first argument in the gather function is the data set, which we will supply using the magrittr pipe (%&gt;%). The second argument, key, is the name of the new column that will indicate the original column column name. In our case we will name this column “measurement_type”, and it will read either “Sepal.Length”, “Sepal.Width”, “Pedal.Length” or “Pedal.Width”. The third argument, value, is the name of the new column being created; in our case we will just name it “new_col”. The last argument is the columns you are gathering. These can be suppled column by column seperated by a comma or you can specify a range of columns using the “:” operator as I do here.</p>
+<pre class="r"><code>iris2 &lt;- iris %&gt;%
+  gather( key = &quot;measurement_type&quot;, value = &quot;new_col&quot;, Sepal.Length:Petal.Width)
+
+head(iris2)</code></pre>
+<pre><code>##   Species measurement_type new_col
+## 1  setosa     Sepal.Length     5.1
+## 2  setosa     Sepal.Length     4.9
+## 3  setosa     Sepal.Length     4.7
+## 4  setosa     Sepal.Length     4.6
+## 5  setosa     Sepal.Length     5.0
+## 6  setosa     Sepal.Length     5.4</code></pre>
+<p>I have run into scenarios where I had a data set indexed by weeks, but I wanted a data set that was indexed by days. I’ve created one such data set below.</p>
 <pre class="r"><code>dat &lt;- tbl_df(data.frame(
   week_begins = as.Date(c('12/31/17', '01/07/18', '01/14/18'), format = &quot;%m/%d/%y&quot;),
-  Sunday = rnorm(3),
-  Monday = rnorm(3),
-  Tuesday = rnorm(3),
-  Wednesday = rnorm(3),
-  Thursday = rnorm(3),
-  Friday = rnorm(3),
-  Saturday = rnorm(3)
+  Sunday = 1:3,
+  Monday = 4:6,
+  Tuesday = 7:9,
+  Wednesday = 10:12,
+  Thursday = 13:15,
+  Friday = 16:18,
+  Saturday = 19:21
                   ))</code></pre>
-<p>You’ll see that using the <code>gather</code> function as we did before makes the data frame out of order, which isn’t very useful if we wanted to plot the data over time. We can overcome this simply by using dplyr’s <code>arrange</code> function.</p>
-<pre class="r"><code>dat %&gt;%
+<p>You’ll see that using the <code>gather</code> function as we did before makes the data frame out of order, which isn’t very useful if we wanted to plot the data over time or do some other task that requires the data sorted by day. We can overcome this simply by using dplyr’s <code>arrange</code> function.</p>
+<pre class="r"><code>daily &lt;- dat %&gt;%
   gather(key = Day, value = &quot;x&quot;, Sunday:Saturday) %&gt;%
   arrange(week_begins)</code></pre>
 <pre><code>## Warning: package 'bindrcpp' was built under R version 3.4.3</code></pre>
-<pre><code>## # A tibble: 21 x 3
-##    week_begins Day             x
-##    &lt;date&gt;      &lt;chr&gt;       &lt;dbl&gt;
-##  1 2017-12-31  Sunday    -0.792 
-##  2 2017-12-31  Monday     0.364 
-##  3 2017-12-31  Tuesday   -0.779 
-##  4 2017-12-31  Wednesday -0.690 
-##  5 2017-12-31  Thursday   0.104 
-##  6 2017-12-31  Friday     0.459 
-##  7 2017-12-31  Saturday  -0.645 
-##  8 2018-01-07  Sunday    -0.153 
-##  9 2018-01-07  Monday    -0.738 
-## 10 2018-01-07  Tuesday    0.0774
-## # ... with 11 more rows</code></pre>
+<pre class="r"><code>head(daily)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   week_begins Day           x
+##   &lt;date&gt;      &lt;chr&gt;     &lt;int&gt;
+## 1 2017-12-31  Sunday        1
+## 2 2017-12-31  Monday        4
+## 3 2017-12-31  Tuesday       7
+## 4 2017-12-31  Wednesday    10
+## 5 2017-12-31  Thursday     13
+## 6 2017-12-31  Friday       16</code></pre>
+<p>Suppose instead of gathering several variables into one variable, you wanted to do the opposite by take a single variable and spread it out into different variables. For example, suppose we wanted to the daily data set and create the dat data set by turning the variable x in the daily set into the variables Sunday, Monday, … like in that dat data set.</p>
+<p>We can use the tidyr function <code>spread</code> to do this. As usual the first argument is the data set. The second argument is column whose values will you are transforming into column names in the output data set; in our case the “Day” column in the daily data set. The third argument is the column whose values will populate the cells; in this case the “x” column in the daily data set.</p>
+<p>We’ll add one more line of code using the dplyr <code>select</code> function so we can order the columns as they are in the dat data set.</p>
+<pre class="r"><code>daily %&gt;%
+  spread(Day, x) %&gt;%
+  select(week_begins, Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday)</code></pre>
+<pre><code>## # A tibble: 3 x 8
+##   week_begins Sunday Monday Tuesday Wednesday Thursday Friday Saturday
+## * &lt;date&gt;       &lt;int&gt;  &lt;int&gt;   &lt;int&gt;     &lt;int&gt;    &lt;int&gt;  &lt;int&gt;    &lt;int&gt;
+## 1 2017-12-31       1      4       7        10       13     16       19
+## 2 2018-01-07       2      5       8        11       14     17       20
+## 3 2018-01-14       3      6       9        12       15     18       21</code></pre>
 </div>
 
 

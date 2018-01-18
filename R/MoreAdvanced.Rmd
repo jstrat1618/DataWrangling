@@ -18,36 +18,48 @@ data("iris")
 head(iris)
 ```
 
-Imagine we wanted a data frame with one 3 columns: one the species, the value observed and weather that value was recorded, and the type of measurement (sepal length, sepal width, etc). We coud use the `gather` function for this. Following in the tidyverse ways, the first argument in the gather function is the data set, which we will supply using the magrittr pipe (%>%). The second argument, key, is the column used to gether the data. The third argument, value, is the name of the new column being created. The last argument is the columns you are gathering. These can be suppled column by column sepearted by a comma or you can specify a range of columns using the ":" operator as I do here.
+Imagine we wanted a data frame with one 3 columns: one the species, the type of measurement (sepal length, sepal width, etc) and the recorded. We coud use the `gather` function for this. Following in the tidyverse ways, the first argument in the gather function is the data set, which we will supply using the magrittr pipe (%>%). The second argument, key, is the name of the new column that will indicate the original column column name. In our case we will name this column "measurement_type", and it will read either "Sepal.Length", "Sepal.Width", "Pedal.Length" or "Pedal.Width". The third argument, value, is the name of the new column being created; in our case we will just name it "new_col". The last argument is the columns you are gathering. These can be suppled column by column seperated by a comma or you can specify a range of columns using the ":" operator as I do here.
 
 ```{r}
-iris %>%
-  gather( key = Species, value = "measurement", Sepal.Length:Petal.Width) %>%
-  head()
+iris2 <- iris %>%
+  gather( key = "measurement_type", value = "new_col", Sepal.Length:Petal.Width)
+
+head(iris2)
 ```
 
 
-I have run into scenarios where I had a data set indexed by weeks, but I wanted a data set that was indexed by days. I've simulated one such data set below.
+I have run into scenarios where I had a data set indexed by weeks, but I wanted a data set that was indexed by days. I've created one such data set below.
 
 ```{r}
 dat <- tbl_df(data.frame(
   week_begins = as.Date(c('12/31/17', '01/07/18', '01/14/18'), format = "%m/%d/%y"),
-  Sunday = rnorm(3),
-  Monday = rnorm(3),
-  Tuesday = rnorm(3),
-  Wednesday = rnorm(3),
-  Thursday = rnorm(3),
-  Friday = rnorm(3),
-  Saturday = rnorm(3)
+  Sunday = 1:3,
+  Monday = 4:6,
+  Tuesday = 7:9,
+  Wednesday = 10:12,
+  Thursday = 13:15,
+  Friday = 16:18,
+  Saturday = 19:21
                   ))
 ```
 
-You'll see that using the `gather` function as we did before makes the data frame out of order, which isn't very useful if we wanted to plot the data over time. We can overcome this simply by using dplyr's `arrange` function. 
+You'll see that using the `gather` function as we did before makes the data frame out of order, which isn't very useful if we wanted to plot the data over time or do some other task that requires the data sorted by day. We can overcome this simply by using dplyr's `arrange` function. 
 ```{r}
-dat %>%
+daily <- dat %>%
   gather(key = Day, value = "x", Sunday:Saturday) %>%
   arrange(week_begins)
+
+head(daily)
 ```
 
+Suppose instead of gathering several variables into one variable, you wanted to do the opposite by take a single variable and spread it out into different variables. For example, 
+suppose we wanted to the daily data set and create the dat data set by turning the variable x in the daily set into the variables Sunday, Monday, ... like in that dat data set. 
 
+We can use the tidyr function `spread` to do this. As usual the first argument is the data set. The second argument is column whose values will you are transforming into column names in the output data set; in our case the "Day" column in the daily data set. The third argument is the column whose values will populate the cells; in this case the "x" column in the daily data set. 
 
+We'll add one more line of code using the dplyr `select` function so we can order the columns as they are in the dat data set.
+```{r}
+daily %>%
+  spread(Day, x) %>%
+  select(week_begins, Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday)
+```
