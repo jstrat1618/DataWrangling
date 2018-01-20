@@ -63,3 +63,30 @@ daily %>%
   spread(Day, x) %>%
   select(week_begins, Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday)
 ```
+
+We can do this because each x in the daily  data set can be identified as belonging to a specific Day and week_begins value. However, if we tried to get back the iris data set from the iris2 data set because not every value of new_col can be matched to a specific species and measurement_type. For example, the first row in iris2 has a value for new_col of 5.1. We can deduce from iris2 that this is a sepal length from a setosa flower. Let's call this flower1. Now can we reliably deduce flower1's sepal width? From this data set not really. However, we could overcome this by inserting a flower id column in the original iris data set.
+
+```{r}
+iris3 <- iris %>%
+  mutate(id = 1:nrow(iris))
+
+iris4 <- iris3 %>%
+  gather( key = "measurement_type", value = "new_col", Sepal.Length:Petal.Width)
+
+
+head(iris4)
+```
+Now, we can transform iris4 back into the iris3 data set as follows.
+
+```{r}
+iris4 %>%
+  spread(measurement_type, new_col)
+```
+
+
+
+
+
+
+
+
